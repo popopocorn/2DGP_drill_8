@@ -71,6 +71,49 @@ class Run:
     def draw(obj):
         obj.image.clip_draw(obj.frame * 100, obj.action * 100, 100, 100, obj.x, obj.y)
         pass
+
+class AutoRun:
+    @staticmethod
+    def enter(obj, e):
+
+        obj.start_time = get_time()
+        if obj.dir>=0:
+            obj.dir = 1
+            obj.dx = 1
+            obj.action = 1
+            obj.frame = 0
+        elif obj.dir<0:
+            obj.dx = -1
+            obj.dir = -1
+            obj.action = 0
+            obj.frame = 0
+
+    @staticmethod
+    def exit(obj):
+
+        pass
+
+    @staticmethod
+    def do(obj):
+        obj.x += obj.dx * 20
+        obj.frame = (obj.frame + 1) % 8
+        if get_time() - obj.start_time > 5:
+            obj.state_machine.add_event(('TIME_OUT', 0))
+
+        if obj.x>768:
+            obj.dx = -1
+            obj.dir = -1
+            obj.action = 0
+            obj.frame = 0
+        elif obj.x<32:
+            obj.dir = 1
+            obj.dx = 1
+            obj.action = 1
+            obj.frame = 0
+    @staticmethod
+    def draw(obj):
+        obj.image.clip_draw(obj.frame * 100, obj.action * 100, 100, 100, obj.x, obj.y+30, 200, 200)
+        pass
 class Boy:
     def __init__(self):
         self.x, self.y = 400, 90
@@ -84,9 +127,9 @@ class Boy:
         self.state_machine.set_transitions(
             {
                 Run : {right_down : Idle, left_down : Idle, right_up : Idle, left_up : Idle},
-                Idle : {right_down: Run, left_down : Run, left_up : Run, right_up : Run,time_out : Sleep},
+                Idle : {right_down: Run, left_down : Run, left_up : Run, right_up : Run,time_out : Sleep, a_down : AutoRun},
                 Sleep : {right_down : Run, left_down: Run, right_up: Run, left_up : Run, space_down : Idle},
-
+                AutoRun : {right_down: Run, left_down : Run, left_up : Run, right_up : Run,time_out : Idle}
             }
         )
     def update(self):
